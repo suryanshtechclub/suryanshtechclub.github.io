@@ -1,0 +1,149 @@
+/* Dark theme variables */
+:root {
+    --primary: #0f0c29;
+    --secondary: #302b63;
+    --accent: #007cf0;
+    --highlight: #00ffe0;
+    --text-light: #e0e0e0;
+    --text-muted: #aab2c3;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  
+  body {
+    background: var(--primary);
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+  
+  /* Header/Nav */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+    background: rgba(15, 12, 41, 0.9);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .logo {
+    font-size: 1.8rem;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+  }
+  
+  nav a {
+    color: var(--text-light);
+    text-decoration: none;
+    transition: 0.3s;
+  }
+  
+  nav a:hover,
+  .cta {
+    color: var(--accent);
+  }
+  
+  .cta {
+    border: 1px solid var(--accent);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+  }
+  
+  /* Hero Section */
+  .hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5rem 3rem;
+    background: linear-gradient(to right, #0f0c29, #302b63, #24243e);
+    min-height: 90vh;
+  }
+  
+  .hero-text {
+    flex: 1;
+    max-width: 50%;
+  }
+  
+  .hero-text h1 {
+    font-size: 3rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+  
+  .hero-text p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+  }
+  
+  .btn {
+    background: var(--highlight);
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    color: #000;
+    font-weight: bold;
+    text-decoration: none;
+    box-shadow: 0 0 10px var(--highlight);
+    transition: 0.3s;
+  }
+  
+  .btn:hover {
+    box-shadow: 0 0 25px var(--highlight);
+  }
+  
+  /* Image Styling */
+  .hero-image {
+    flex: 1;
+    text-align: right;
+  }
+  
+  .hero-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px var(--highlight);
+  }
+  /* Animation keyframes */
+@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes floatIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Apply animations */
+  .hero-text {
+    animation: fadeInUp 1s ease-out forwards;
+  }
+  
+  .hero-image img {
+    animation: floatIn 1.5s ease-out forwards;
+  }
+  
