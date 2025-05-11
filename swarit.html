@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My AI & Tech Hub</title>
+  <style>
+    /* Reset default styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Body & Typography */
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Header */
+    header {
+      background-color: #0f172a;
+      color: #ffffff;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      animation: fadeInDown 1s ease-out;
+    }
+
+    header h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      font-size: 1.2rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      background-color: #e0f2fe;
+      animation: fadeIn 1.2s ease-in;
+    }
+
+    .hero img {
+      max-width: 400px;
+      width: 100%;
+      border-radius: 1rem;
+      margin: 1rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .hero-text {
+      max-width: 500px;
+      margin: 1rem;
+    }
+
+    .hero-text h2 {
+      font-size: 2.5rem;
+      color: #0f172a;
+      margin-bottom: 1rem;
+    }
+
+    .hero-text p {
+      font-size: 1.1rem;
+    }
+
+    /* Sections */
+    .sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 2rem;
+      padding: 4rem 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h3 {
+      margin-top: 0;
+      color: #0f172a;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 1rem;
+      background-color: #0f172a;
+      color: white;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes fadeInDown {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .hero img {
+        margin-top: 2rem;
+      }
+
+      nav ul {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Welcome to My AI & Tech Hub</h1>
+    <p>Your gateway to software, learning, and creativity.</p>
+  </header>
+
+  <section class="hero">
+    <img src="https://via.placeholder.com/400x250" alt="Tech Image" />
+    <div class="hero-text">
+      <h2>Explore the World of Innovation</h2>
+      <p>We bring you cutting-edge AI tools, powerful software, fun games, rich study resources, and modern web development guides—all in one place.</p>
+    </div>
+  </section>
+
+  <section class="sections">
+    <div class="card">
+      <h3>🤖 AI Tools</h3>
+      <p>Discover intelligent tools for productivity, creativity, and automation.</p>
+    </div>
+    <div class="card">
+      <h3>💻 Software</h3>
+      <p>Download and explore useful applications built for modern needs.</p>
+    </div>
+    <div class="card">
+      <h3>🎮 Games</h3>
+      <p>Play and learn with fun browser-based or downloadable games.</p>
+    </div>
+    <div class="card">
+      <h3>📚 Study Material</h3>
+      <p>Access curated notes, tutorials, and PDFs for various subjects.</p>
+    </div>
+    <div class="card">
+      <h3>🌐 Web Development</h3>
+      <p>Learn HTML, CSS, JS, React, and backend technologies with hands-on guides.</p>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 My AI & Tech Hub | Designed with ❤️</p>
+  </footer>
+
+</body>
+</html>
