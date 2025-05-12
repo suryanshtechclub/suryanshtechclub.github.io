@@ -5,6 +5,96 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Suryansh TechClub</title>
     <link rel="stylesheet" href="style.css" />
+    <style>
+      /* Inline key animations just for demonstration */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      .fadeIn {
+        animation: fadeInUp 1s ease forwards;
+      }
+
+      .pulse {
+        animation: pulse 3s infinite;
+      }
+
+      .section {
+        padding: 60px 20px;
+        text-align: center;
+      }
+
+      .section h2 {
+        font-size: 2.2rem;
+        color: #0078d4;
+        margin-bottom: 20px;
+      }
+
+      .section p {
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .features-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 40px;
+      }
+
+      .feature-item {
+        background: #f4faff;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 300px;
+        transition: transform 0.3s;
+      }
+
+      .feature-item:hover {
+        transform: translateY(-5px);
+      }
+
+      .footer {
+        background: #111;
+        color: #ccc;
+        text-align: center;
+        padding: 30px 20px;
+      }
+
+      .footer a {
+        color: #66ccff;
+        margin: 0 10px;
+        text-decoration: none;
+      }
+
+      .testimonial {
+        background: #eaf4ff;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 15px auto;
+        max-width: 600px;
+      }
+    </style>
   </head>
   <body>
     <header>
@@ -21,17 +111,63 @@
     </header>
 
     <section class="hero">
-      <div class="hero-text">
+      <div class="hero-text fadeIn">
         <h1>Intelligent Conversations<br />With Neural Precision</h1>
         <p>
-          Experience the future of AI-driven communication — fast, secure, and
-          intuitive.
+          Experience the future of AI-driven communication — fast, secure, and intuitive.
         </p>
         <a href="swarit.html" class="btn">Launch the Bot</a>
       </div>
-      <div class="hero-image">
+      <div class="hero-image pulse">
         <img src="ai-illustration.png" alt="AI Processor" />
       </div>
     </section>
+
+    <section class="section fadeIn">
+      <h2>Why Suryansh TechClub?</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <h3>🚀 Fast AI Responses</h3>
+          <p>Our bots reply in milliseconds with context-aware intelligence.</p>
+        </div>
+        <div class="feature-item">
+          <h3>🔐 Safe & Secure</h3>
+          <p>All data is encrypted — your privacy is always our priority.</p>
+        </div>
+        <div class="feature-item">
+          <h3>📚 Smart Learning</h3>
+          <p>Machine learning models that improve as you use them.</p>
+        </div>
+        <div class="feature-item">
+          <h3>💡 Built for Creators</h3>
+          <p>Custom bots, APIs, and tools to bring your ideas to life.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section fadeIn">
+      <h2>What People Say</h2>
+      <div class="testimonial">
+        <p>“The bot feels like a real teammate — responsive and smart.”<br /><strong>– Ishika, Developer</strong></p>
+      </div>
+      <div class="testimonial">
+        <p>“Super clean interface. Fast answers. 10/10 experience.”<br /><strong>– Pranav, Tech Enthusiast</strong></p>
+      </div>
+    </section>
+
+    <section class="section fadeIn">
+      <h2>Start Your AI Journey Now</h2>
+      <p>Tap into powerful AI tools — free to explore, easy to use.</p>
+      <a href="swarit.html" class="btn" style="margin-top:20px;">Launch the Bot</a>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2025 Suryansh TechClub. All rights reserved.</p>
+      <p>
+        <a href="#">Twitter</a> |
+        <a href="#">LinkedIn</a> |
+        <a href="#">GitHub</a>
+      </p>
+    </footer>
   </body>
 </html>
