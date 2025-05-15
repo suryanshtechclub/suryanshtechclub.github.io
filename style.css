@@ -129,6 +129,50 @@ main {
   padding-left: 1.5rem;
   list-style: disc;
 }
+/* Default (desktop) */
+.nav-mobile {
+  display: none;
+}
+.nav-desktop ul {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+}
+.nav-desktop li a {
+  text-decoration: none;
+  padding: 10px;
+}
+
+/* Mobile view (under 768px) */
+@media screen and (max-width: 768px) {
+  .nav-desktop {
+    display: none;
+  }
+  .nav-mobile {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+  }
+  .nav-mobile ul {
+    display: flex;
+    justify-content: space-around;
+    list-style: none;
+    margin: 0;
+    padding: 10px 0;
+  }
+  .nav-mobile li a {
+    text-decoration: none;
+    font-size: 18px;
+    color: #333;
+  }
+  .nav-mobile .cta {
+    font-weight: bold;
+    color: #007bff;
+  }
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
