@@ -1,0 +1,11 @@
+firebase-chat/
+  package.json
+  public/
+    index.html
+    favicon.ico
+  src/
+    index.js
+    App.js
+    firebase.js
+    Chat.js
+    Login.js
