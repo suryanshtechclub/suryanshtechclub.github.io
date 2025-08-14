@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DM Chat — Connect Instantly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0f1115;
+      --text:#e6e9f4;
+      --muted:#8b93a7;
+      --accent:#D35400;
+      --accent-weak:#d3540022;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      font-family:Inter,system-ui,sans-serif;
+      background:linear-gradient(180deg,#0e1014,#0b0d11);
+      color:var(--text);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      text-align:center;
+      padding:20px;
+    }
+    .container {
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 14px;
+    }
+    p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+    .btn {
+      display:inline-block;
+      padding:14px 28px;
+      font-size:1.1rem;
+      font-weight:600;
+      color:white;
+      background:var(--accent);
+      border:none;
+      border-radius:14px;
+      text-decoration:none;
+      box-shadow:0 6px 16px var(--accent-weak);
+      cursor:pointer;
+      transform:translateY(0);
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .btn:hover {
+      transform:translateY(-2px);
+      box-shadow:0 8px 20px var(--accent-weak);
+    }
+    .btn:active {
+      transform:translateY(1px);
+    }
+    footer {
+      margin-top:40px;
+      font-size:0.85rem;
+      color:var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Connect Instantly with DM Chat</h1>
+    <p>Real-time, one-on-one messaging made simple. Sign in, start a conversation, and stay connected — securely and instantly.</p>
+    <a class="btn" href="firebase-dm-chat.html">Launch App</a>
+    <footer>© 2025 DM Chat. All rights reserved.</footer>
+  </div>
+</body>
+</html>

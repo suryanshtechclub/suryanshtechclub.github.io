@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chat — Firebase DM (Minimal)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f1115;         /* deep charcoal */
+      --panel:#151922;      /* card bg */
+      --muted:#8b93a7;      /* secondary text */
+      --text:#e6e9f4;       /* primary text */
+      --accent:#D35400;     /* requested accent */
+      --accent-weak:#d3540022;
+      --success:#16a34a;
+      --danger:#ef4444;
+      --radius:16px;
+      --gap:14px;
+      --shadow:0 12px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#0e1014,#0b0d11);color:var(--text)}
+    .app{height:100vh;display:grid;grid-template-columns:320px 1fr;gap:0}
+    .sidebar{border-right:1px solid #222733;background:var(--panel);display:flex;flex-direction:column}
+    .header{padding:18px 16px;border-bottom:1px solid #222733;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:28px;height:28px;border-radius:10px;background:var(--accent);box-shadow:0 6px 16px var(--accent-weak)}
+    .title{font-weight:700;letter-spacing:.2px}
+    .auth, .new-chat{padding:16px;border-bottom:1px solid #222733}
+    input, button{font:inherit}
+    .input{width:100%;background:#0c0f14;border:1px solid #242a36;border-radius:12px;padding:12px 12px;color:var(--text);outline:none;transition:border-color .2s}
+    .input:focus{border-color:var(--accent)}
+    .row{display:flex;gap:10px}
+    .btn{border:none;border-radius:12px;padding:10px 12px;background:#1f2533;color:var(--text);cursor:pointer;transition:transform .06s ease, background .2s}
+    .btn:active{transform:translateY(1px)}
+    .btn.accent{background:var(--accent);color:white;box-shadow:0 6px 16px var(--accent-weak)}
+    .btn.ghost{background:transparent;border:1px solid #2a3142}
+    .btn.small{padding:8px 10px;border-radius:10px}
+    .muted{color:var(--muted)}
+
+    .convos{overflow:auto;padding:8px 8px 20px}
+    .convo{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;cursor:pointer;transition:background .2s}
+    .convo:hover{background:#1a1f2b}
+    .convo.active{background:#1e2636;border:1px solid #2b3244}
+    .avatar{width:36px;height:36px;border-radius:12px;background:#22293a;display:grid;place-items:center;font-weight:700;color:#fffb;box-shadow:inset 0 0 0 1px #2a3142}
+    .meta{display:flex;flex-direction:column}
+    .name{font-weight:600}
+
+    .chat{display:flex;flex-direction:column;height:100vh}
+    .chat-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #222733;background:var(--panel)}
+    .chat-body{flex:1;overflow:auto;padding:20px 24px;display:flex;flex-direction:column;gap:12px;background:radial-gradient(80% 100% at 40% 0%,rgba(211,84,0,.06),transparent 60%)}
+    .bubble{max-width:70%;padding:12px 14px;border-radius:16px;box-shadow:var(--shadow);opacity:0;transform:translateY(6px);animation:pop .18s ease forwards}
+    .bubble.me{margin-left:auto;background:linear-gradient(180deg,var(--accent),#c94900)}
+    .bubble.them{background:#1d2432;border:1px solid #2a3142}
+    .stamp{font-size:12px;color:#9aa3b6;margin-top:4px}
+    @keyframes pop{to{opacity:1;transform:none}}
+
+    .composer{display:flex;gap:10px;padding:14px;border-top:1px solid #222733;background:var(--panel)}
+    .composer .input{flex:1}
+    .icon{width:20px;height:20px;stroke:var(--accent);stroke-width:2;fill:none}
+    .link{color:var(--accent);text-decoration:none}
+
+    /* Auth panel overlay */
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
+    .overlay.show{display:flex}
+    .card{width:min(560px,92vw);background:var(--panel);border:1px solid #242a36;border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+    .card h2{margin:0 0 10px}
+  </style>
+</head>
+<body>
+  <div class="app" id="app" hidden>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="header">
+        <div class="brand"><div class="logo"></div><div class="title">DM Chat</div></div>
+        <button id="logoutBtn" class="btn small ghost" title="Sign out" aria-label="Sign out">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+        </button>
+      </div>
+
+      <div class="new-chat">
+        <div class="muted" style="margin-bottom:8px">Start new chat</div>
+        <div class="row" style="margin-bottom:8px">
+          <input id="newEmail" class="input" placeholder="Recipient email" autocomplete="off" />
+          <button id="startChat" class="btn accent">Chat</button>
+        </div>
+        <div class="muted" style="font-size:12px">Tip: The recipient must have signed up at least once.</div>
+      </div>
+
+      <div class="auth" id="meBox">
+        <div class="muted" style="margin-bottom:6px">Signed in as</div>
+        <div id="meEmail" style="font-weight:600"></div>
+      </div>
+
+      <div class="muted" style="padding:10px 16px">Conversations</div>
+      <div class="convos" id="convos"></div>
+    </aside>
+
+    <!-- Chat area -->
+    <section class="chat">
+      <div class="chat-header">
+        <div>
+          <div id="chatWith" class="title">Select or start a chat</div>
+          <div id="chatSub" class="muted" style="font-size:12px"></div>
+        </div>
+      </div>
+      <div class="chat-body" id="messages"></div>
+      <div class="composer">
+        <input id="msgInput" class="input" placeholder="Type a message and press Enter…" autocomplete="off" />
+        <button id="sendBtn" class="btn accent" title="Send" aria-label="Send">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4Z"/></svg>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Auth overlay -->
+  <div id="authOverlay" class="overlay show" role="dialog" aria-modal="true">
+    <div class="card">
+      <h2>Welcome</h2>
+      <p class="muted" style="margin:4px 0 14px">Sign in or create an account to start messaging.</p>
+      <div class="row" style="margin-bottom:10px">
+        <input id="email" class="input" placeholder="Email" autocomplete="username email" />
+      </div>
+      <div class="row" style="margin-bottom:14px">
+        <input id="password" type="password" class="input" placeholder="Password" autocomplete="current-password" />
+      </div>
+      <div class="row">
+        <button id="login" class="btn accent" style="flex:1">Sign In</button>
+        <button id="signup" class="btn ghost" style="flex:1">Create Account</button>
+      </div>
+      <div id="authMsg" class="muted" style="margin-top:10px;min-height:20px"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs (modular v9 via CDN) -->
+  <script type="module">
+    // 1) Paste your Firebase web app config below, then open this file in a web server.
+    const firebaseConfig = {
+  apiKey: "AIzaSyDB7bO0ECmr8b8APzUTSCSYlsNpId9p-lA",
+  authDomain: "suryansh-techclub.firebaseapp.com",
+  projectId: "suryansh-techclub",
+  storageBucket: "suryansh-techclub.firebasestorage.app",
+  messagingSenderId: "1002737767857",
+  appId: "1:1002737767857:web:12d0052c92ac921b441990",
+  measurementId: "G-W7Y91N14HN"
+};
+
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDoc, addDoc, collection, query, orderBy, onSnapshot, serverTimestamp, where, getDocs, updateDoc } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI refs
+    const appRoot = document.getElementById('app');
+    const overlay = document.getElementById('authOverlay');
+    const emailEl = document.getElementById('email');
+    const passEl = document.getElementById('password');
+    const loginBtn = document.getElementById('login');
+    const signupBtn = document.getElementById('signup');
+    const authMsg = document.getElementById('authMsg');
+    const meEmail = document.getElementById('meEmail');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const newEmail = document.getElementById('newEmail');
+    const startChat = document.getElementById('startChat');
+    const convosEl = document.getElementById('convos');
+
+    const chatWith = document.getElementById('chatWith');
+    const chatSub = document.getElementById('chatSub');
+    const messagesEl = document.getElementById('messages');
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let currentUser = null;
+    let activeConvoId = null;
+    let activeUnsub = null;
+
+    function avatarFromEmail(email){
+      return email ? email[0].toUpperCase() : '?';
+    }
+
+    function convoIdFor(u1, u2){
+      return [u1, u2].sort().join('_');
+    }
+
+    async function ensureUserProfile(user){
+      const ref = doc(db, 'users', user.uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        await setDoc(ref, { uid: user.uid, email: user.email || '', createdAt: serverTimestamp() });
+      }
+    }
+
+    async function findUserByEmail(email){
+      const q = query(collection(db,'users'), where('email','==', email));
+      const s = await getDocs(q);
+      let found = null;
+      s.forEach(d=> found = d.data());
+      return found; // { uid, email }
+    }
+
+    async function openConversationWithEmail(email){
+      if(!currentUser) return;
+      if(!email || email === currentUser.email){
+        alert('Enter a different user\'s email.');
+        return;
+      }
+      const other = await findUserByEmail(email);
+      if(!other){
+        alert('No user with that email. Ask them to sign up once.');
+        return;
+      }
+      const id = convoIdFor(currentUser.uid, other.uid);
+      const ref = doc(db, 'conversations', id);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        await setDoc(ref, {
+          id,
+          participants:[currentUser.uid, other.uid],
+          emails:[currentUser.email, other.email],
+          createdAt: serverTimestamp(),
+          lastMessageAt: serverTimestamp()
+        });
+      }
+      setActiveConversation({ id, otherEmail: other.email });
+      await loadConversations();
+    }
+
+    async function loadConversations(){
+      if(!currentUser) return;
+      convosEl.innerHTML = '';
+      const q = query(collection(db,'conversations'));
+      const s = await getDocs(q);
+      const items = [];
+      s.forEach(docSnap => {
+        const c = docSnap.data();
+        if(c.participants?.includes(currentUser.uid)){
+          const otherEmail = c.emails.find(e => e !== currentUser.email) || 'Unknown';
+          items.push({ id:c.id, otherEmail, last:c.lastMessageAt?.toMillis?.() || 0 });
+        }
+      });
+      items.sort((a,b)=>b.last-a.last);
+      for(const it of items){
+        const el = document.createElement('div');
+        el.className = 'convo' + (activeConvoId===it.id ? ' active' : '');
+        el.innerHTML = `
+          <div class="avatar">${avatarFromEmail(it.otherEmail)}</div>
+          <div class="meta">
+            <div class="name">${it.otherEmail}</div>
+            <div class="muted" style="font-size:12px">${new Date(it.last||0).toLocaleString() || ''}</div>
+          </div>`;
+        el.onclick = () => setActiveConversation(it);
+        convosEl.appendChild(el);
+      }
+    }
+
+    function setActiveConversation({ id, otherEmail }){
+      if(activeUnsub) activeUnsub();
+      activeConvoId = id;
+      chatWith.textContent = otherEmail || 'Chat';
+      chatSub.textContent = otherEmail ? `Direct messages with ${otherEmail}` : '';
+      messagesEl.innerHTML = '';
+      const q = query(collection(db,'conversations', id, 'messages'), orderBy('createdAt'));
+      activeUnsub = onSnapshot(q, snap => {
+        messagesEl.innerHTML = '';
+        snap.forEach(d => {
+          const m = d.data();
+          const div = document.createElement('div');
+          div.className = 'bubble ' + (m.senderId === currentUser.uid ? 'me' : 'them');
+          div.innerHTML = `${m.text}`;
+          const stamp = document.createElement('div');
+          stamp.className = 'stamp';
+          const t = m.createdAt?.toDate?.() || new Date();
+          stamp.textContent = t.toLocaleString();
+          messagesEl.appendChild(div);
+          messagesEl.appendChild(stamp);
+        });
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      });
+    }
+
+    async function sendMessage(){
+      if(!currentUser || !activeConvoId) return;
+      const text = msgInput.value.trim();
+      if(!text) return;
+      msgInput.value='';
+      await addDoc(collection(db,'conversations', activeConvoId, 'messages'), {
+        text,
+        senderId: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+      await updateDoc(doc(db,'conversations', activeConvoId), { lastMessageAt: serverTimestamp() });
+    }
+
+    // Auth handlers
+    loginBtn.onclick = async () => {
+      authMsg.textContent = 'Signing in…';
+      try{
+        const { user } = await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+        await ensureUserProfile(user);
+        authMsg.textContent = '';
+      }catch(e){ authMsg.textContent = e.message; }
+    };
+    signupBtn.onclick = async () => {
+      authMsg.textContent = 'Creating account…';
+      try{
+        const { user } = await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
+        await ensureUserProfile(user);
+        authMsg.textContent = '';
+      }catch(e){ authMsg.textContent = e.message; }
+    };
+    logoutBtn.onclick = () => signOut(auth);
+
+    startChat.onclick = () => openConversationWithEmail(newEmail.value.trim());
+    newEmail.addEventListener('keydown', e => { if(e.key==='Enter') startChat.click(); });
+    sendBtn.onclick = sendMessage;
+    msgInput.addEventListener('keydown', e => { if(e.key==='Enter') sendMessage(); });
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if(user){
+        await ensureUserProfile(user);
+        meEmail.textContent = user.email || '';
+        overlay.classList.remove('show');
+        appRoot.hidden = false;
+        await loadConversations();
+      } else {
+        if(activeUnsub) activeUnsub();
+        activeUnsub = null;
+        activeConvoId = null;
+        appRoot.hidden = true;
+        overlay.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>
