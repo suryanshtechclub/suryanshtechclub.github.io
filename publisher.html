@@ -2,64 +2,82 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Publisher</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Publisher - Live Cam + Recording</title>
 </head>
 <body>
-  <h2>📱 Camera Publisher</h2>
-  <video id="localVideo" autoplay playsinline muted></video>
-
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js"></script>
+  <h2>📱 Publisher (Phone Camera)</h2>
+  <video id="localVideo" autoplay playsinline muted style="width:320px;"></video>
+  <br>
+  <button onclick="startRecording()">Start Recording</button>
+  <button onclick="stopRecording()">Stop Recording</button>
+  <a id="downloadLink" style="display:none;">Download Video</a>
+  <canvas id="motionCanvas" width="320" height="240" style="display:none;"></canvas>
 
   <script>
-    // 🔹 Paste your Firebase config here
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT.firebaseapp.com",
-      projectId: "YOUR_PROJECT",
-      storageBucket: "YOUR_PROJECT.appspot.com",
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // 🔹 Sign in anonymously
-    firebase.auth().signInAnonymously();
-
-    // 🔹 Get camera
     const video = document.getElementById("localVideo");
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: true })
+    let mediaRecorder, recordedChunks = [];
+
+    // Access camera
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
         video.srcObject = stream;
-        startPublisher(stream);
-      });
+        startMotionDetection(stream);
+      })
+      .catch(err => alert("Camera access denied"));
 
-    async function startPublisher(stream) {
-      const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    // ================= Recording =================
+    function startRecording() {
+      const stream = video.srcObject;
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: "video/webm" });
+        recordedChunks = [];
+        const url = URL.createObjectURL(blob);
+        const a = document.getElementById("downloadLink");
+        a.href = url;
+        a.download = `recording_${Date.now()}.webm`;
+        a.style.display = "inline";
+        a.textContent = "Download Video";
+      };
+      mediaRecorder.start();
+      console.log("Recording started");
+    }
 
-      const callDoc = db.collection("calls").doc("live");
-      const offerCandidates = callDoc.collection("offerCandidates");
-      const answerCandidates = callDoc.collection("answerCandidates");
+    function stopRecording() {
+      if(mediaRecorder) mediaRecorder.stop();
+      console.log("Recording stopped");
+    }
 
-      pc.onicecandidate = e => e.candidate && offerCandidates.add(e.candidate.toJSON());
+    // ================= Motion Detection =================
+    function startMotionDetection(stream){
+      const canvas = document.getElementById("motionCanvas");
+      const ctx = canvas.getContext("2d");
+      let lastFrame = null;
 
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      await callDoc.set({ offer });
+      setInterval(() => {
+        if(video.readyState < 2) return;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-      callDoc.onSnapshot(snapshot => {
-        const data = snapshot.data();
-        if (data?.answer) pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      });
-
-      answerCandidates.onSnapshot(snapshot => {
-        snapshot.docChanges().forEach(change => {
-          if (change.type === "added") pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-        });
-      });
+        if(lastFrame){
+          let diff = 0;
+          for(let i=0;i<frame.data.length;i+=4){
+            diff += Math.abs(frame.data[i]-lastFrame.data[i]);
+          }
+          if(diff>500000){ // motion threshold
+            canvas.toBlob(blob => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `snapshot_${Date.now()}.png`;
+              a.click();
+              console.log("Motion detected → snapshot saved");
+            });
+          }
+        }
+        lastFrame = frame;
+      }, 1000); // every second
     }
   </script>
 </body>
