@@ -1,61 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Viewer - Live Cam</title>
+  <meta charset="UTF-8">
+  <title>Viewer - Phone Security Cam</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; margin:20px; }
+    video { width:320px; border:2px solid #444; margin:5px; }
+  </style>
 </head>
 <body>
-  <h2>👀 Viewer (Any Device)</h2>
-  <video id="remoteVideo" autoplay playsinline controls style="width:320px;"></video>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js"></script>
+<h2>👀 Viewer (Any Device)</h2>
+<video id="remoteVideo" autoplay playsinline controls></video>
 
-  <script>
-    // ================= Firebase Config =================
-    const firebaseConfig = {
-      apiKey: "AIzaSyAepZRzLBGnzkR0NnuG4Z9WnNNuc5AgJ1g",
-      authDomain: "phone-security-cam.firebaseapp.com",
-      projectId: "phone-security-cam",
-      storageBucket: "phone-security-cam.firebasestorage.app",
-      messagingSenderId: "178087465315",
-      appId: "1:178087465315:web:92088f6995134207bdc356",
-      measurementId: "G-80BN8KE1BR"
-    };
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js"></script>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    firebase.auth().signInAnonymously();
+<script>
+  // ================= Firebase Config =================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepZRzLBGnzkR0NnuG4Z9WnNNuc5AgJ1g",
+    authDomain: "phone-security-cam.firebaseapp.com",
+    projectId: "phone-security-cam",
+    storageBucket: "phone-security-cam.firebasestorage.app",
+    messagingSenderId: "178087465315",
+    appId: "1:178087465315:web:92088f6995134207bdc356",
+    measurementId: "G-80BN8KE1BR"
+  };
 
-    // ================= WebRTC Viewer =================
-    const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
-    const video = document.getElementById("remoteVideo");
-    pc.ontrack = e => video.srcObject = e.streams[0];
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  firebase.auth().signInAnonymously();
 
-    const callDoc = db.collection("calls").doc("live");
-    const offerCandidates = callDoc.collection("offerCandidates");
-    const answerCandidates = callDoc.collection("answerCandidates");
+  const remoteVideo = document.getElementById("remoteVideo");
+  const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
 
-    pc.onicecandidate = e => e.candidate && answerCandidates.add(e.candidate.toJSON());
+  // ================= WebRTC Setup =================
+  pc.ontrack = e => remoteVideo.srcObject = e.streams[0];
 
-    // Receive offer from publisher
-    callDoc.get().then(async doc => {
-      const data = doc.data();
-      if (!data || !data.offer) return alert("Publisher not started yet");
+  const callDoc = db.collection("calls").doc("live");
+  const offerCandidates = callDoc.collection("offerCandidates");
+  const answerCandidates = callDoc.collection("answerCandidates");
 
-      await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      await callDoc.update({ answer });
+  pc.onicecandidate = e => { if(e.candidate) answerCandidates.add(e.candidate.toJSON()); };
+
+  // Listen for ICE candidates from publisher
+  offerCandidates.onSnapshot(snapshot=>{
+    snapshot.docChanges().forEach(change=>{
+      if(change.type==="added") pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
     });
+  });
 
-    // Listen for ICE candidates from publisher
-    offerCandidates.onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === "added") pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-      });
-    });
-  </script>
+  // ================= Wait for publisher and connect =================
+  async function waitForPublisher(){
+    let docSnap = await callDoc.get();
+    while(!docSnap.exists || !docSnap.data().offer){
+      console.log("Waiting for publisher...");
+      await new Promise(r => setTimeout(r,1000));
+      docSnap = await callDoc.get();
+    }
+
+    const offer = docSnap.data().offer;
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    await callDoc.update({ answer });
+    console.log("Connected to publisher!");
+  }
+
+  waitForPublisher();
+</script>
+
 </body>
 </html>

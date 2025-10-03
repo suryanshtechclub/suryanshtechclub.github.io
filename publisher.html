@@ -1,84 +1,171 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Publisher - Live Cam + Recording</title>
+  <meta charset="UTF-8">
+  <title>Publisher - Phone Security Cam</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align:center; margin:20px; }
+    video { width:320px; border:2px solid #444; margin:5px; }
+    button { margin:5px; padding:10px 15px; font-size:16px; border-radius:8px; cursor:pointer; }
+    #downloadLink { display:block; margin-top:10px; font-weight:bold; }
+  </style>
 </head>
 <body>
-  <h2>📱 Publisher (Phone Camera)</h2>
-  <video id="localVideo" autoplay playsinline muted style="width:320px;"></video>
-  <br>
-  <button onclick="startRecording()">Start Recording</button>
-  <button onclick="stopRecording()">Stop Recording</button>
-  <a id="downloadLink" style="display:none;">Download Video</a>
-  <canvas id="motionCanvas" width="320" height="240" style="display:none;"></canvas>
 
-  <script>
-    const video = document.getElementById("localVideo");
-    let mediaRecorder, recordedChunks = [];
+<h2>📱 Publisher (Phone Camera)</h2>
+<video id="localVideo" autoplay playsinline muted></video>
+<br>
+<button id="startBtn">Start Recording</button>
+<button id="stopBtn">Stop Recording</button>
+<a id="downloadLink"></a>
 
-    // Access camera
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        video.srcObject = stream;
-        startMotionDetection(stream);
-      })
-      .catch(err => alert("Camera access denied"));
+<canvas id="motionCanvas" width="320" height="240" style="display:none"></canvas>
 
-    // ================= Recording =================
-    function startRecording() {
-      const stream = video.srcObject;
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: "video/webm" });
-        recordedChunks = [];
-        const url = URL.createObjectURL(blob);
-        const a = document.getElementById("downloadLink");
-        a.href = url;
-        a.download = `recording_${Date.now()}.webm`;
-        a.style.display = "inline";
-        a.textContent = "Download Video";
-      };
-      mediaRecorder.start();
-      console.log("Recording started");
-    }
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js"></script>
 
-    function stopRecording() {
-      if(mediaRecorder) mediaRecorder.stop();
+<script>
+  // ================= Firebase Config =================
+  const firebaseConfig = {
+    apiKey: "AIzaSyAepZRzLBGnzkR0NnuG4Z9WnNNuc5AgJ1g",
+    authDomain: "phone-security-cam.firebaseapp.com",
+    projectId: "phone-security-cam",
+    storageBucket: "phone-security-cam.firebasestorage.app",
+    messagingSenderId: "178087465315",
+    appId: "1:178087465315:web:92088f6995134207bdc356",
+    measurementId: "G-80BN8KE1BR"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  firebase.auth().signInAnonymously();
+
+  // ================= Elements =================
+  const localVideo = document.getElementById("localVideo");
+  const motionCanvas = document.getElementById("motionCanvas");
+  const ctx = motionCanvas.getContext("2d");
+  let lastFrame = null;
+
+  const startBtn = document.getElementById("startBtn");
+  const stopBtn = document.getElementById("stopBtn");
+  const downloadLink = document.getElementById("downloadLink");
+
+  let mediaRecorder;
+  let recordedChunks = [];
+
+  // ================= WebRTC Setup =================
+  const pc = new RTCPeerConnection({ iceServers: [{ urls: "stun:stun.l.google.com:19302" }] });
+
+  const callDoc = db.collection("calls").doc("live");
+  const offerCandidates = callDoc.collection("offerCandidates");
+  const answerCandidates = callDoc.collection("answerCandidates");
+
+  pc.onicecandidate = e => { if(e.candidate) offerCandidates.add(e.candidate.toJSON()); };
+  answerCandidates.onSnapshot(snapshot => {
+    snapshot.docChanges().forEach(change => {
+      if(change.type==="added") pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
+    });
+  });
+
+  // ================= Camera Access =================
+  navigator.mediaDevices.getUserMedia({ video:true, audio:true })
+    .then(stream => {
+      localVideo.srcObject = stream;
+
+      // Add tracks to WebRTC
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+      startMotionDetection();
+
+      startPublisher(stream);
+    })
+    .catch(err => alert("Camera access denied: "+err));
+
+  // ================= Start Publisher =================
+  async function startPublisher(stream){
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await callDoc.set({ offer });
+
+    callDoc.onSnapshot(async snapshot=>{
+      const data = snapshot.data();
+      if(data?.answer) await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    });
+  }
+
+  // ================= Recording =================
+  startBtn.addEventListener("click", ()=>{
+    const stream = localVideo.srcObject;
+    if(!stream) return alert("Camera not ready yet!");
+
+    mediaRecorder = new MediaRecorder(stream);
+    recordedChunks = [];
+
+    mediaRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks,{type:"video/webm"});
+      const url = URL.createObjectURL(blob);
+      downloadLink.href = url;
+      downloadLink.download = `recording_${Date.now()}.webm`;
+      downloadLink.textContent = "Download Video";
+      downloadLink.style.display = "inline";
+    };
+    mediaRecorder.start();
+    console.log("Recording started");
+  });
+
+  stopBtn.addEventListener("click", ()=>{
+    if(mediaRecorder && mediaRecorder.state!=="inactive") {
+      mediaRecorder.stop();
       console.log("Recording stopped");
+    } else {
+      alert("Recording is not started yet!");
     }
+  });
 
-    // ================= Motion Detection =================
-    function startMotionDetection(stream){
-      const canvas = document.getElementById("motionCanvas");
-      const ctx = canvas.getContext("2d");
-      let lastFrame = null;
+  // ================= Motion Detection =================
+  function startMotionDetection(){
+    setInterval(()=>{
+      if(localVideo.readyState < 2) return;
+      ctx.drawImage(localVideo,0,0,motionCanvas.width,motionCanvas.height);
+      const frame = ctx.getImageData(0,0,motionCanvas.width,motionCanvas.height);
 
-      setInterval(() => {
-        if(video.readyState < 2) return;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-        if(lastFrame){
-          let diff = 0;
-          for(let i=0;i<frame.data.length;i+=4){
-            diff += Math.abs(frame.data[i]-lastFrame.data[i]);
-          }
-          if(diff>500000){ // motion threshold
-            canvas.toBlob(blob => {
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = `snapshot_${Date.now()}.png`;
-              a.click();
-              console.log("Motion detected → snapshot saved");
-            });
-          }
+      if(lastFrame){
+        let diff=0;
+        for(let i=0;i<frame.data.length;i+=4) diff += Math.abs(frame.data[i]-lastFrame.data[i]);
+        if(diff>500000){
+          motionCanvas.toBlob(blob=>{
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `snapshot_${Date.now()}.png`;
+            a.click();
+            console.log("Motion detected → snapshot saved");
+          });
         }
-        lastFrame = frame;
-      }, 1000); // every second
+      }
+      lastFrame = frame;
+    },1000);
+  }
+
+  if ('wakeLock' in navigator) {
+  let wakeLock = null;
+  async function requestWakeLock() {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log("Wake Lock active");
+      wakeLock.addEventListener('release', ()=>console.log('Wake Lock released'));
+    } catch(err){
+      console.log('Wake Lock failed:', err);
     }
-  </script>
+  }
+  requestWakeLock();
+  // Optional: re-request on visibility change
+  document.addEventListener('visibilitychange', ()=>{ if(!wakeLock) requestWakeLock(); });
+}
+
+</script>
+
 </body>
 </html>

@@ -3,60 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <title>Suryansh Tech Club - Phone Security Cam</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js')
+      .then(()=>console.log('Service Worker registered'))
+      .catch(err=>console.log('SW failed', err));
+    }
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background: linear-gradient(135deg, #ffcc00, #ff3300);
-      color: #222;
+      background: linear-gradient(135deg,#ffcc00,#ff3300);
+      color:#fff;
       min-height: 100vh;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
     }
-    h1 {
-      font-size: 2.5rem;
-      margin-bottom: 1rem;
-      color: #fff;
-      text-shadow: 2px 2px #444;
-    }
-    p {
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      color: #fff;
-      max-width: 500px;
-    }
+    h1 { font-size:2.5rem; margin-bottom:1rem; text-shadow:2px 2px #444; }
+    p { font-size:1.2rem; max-width:500px; margin-bottom:2rem; }
     .buttons a {
-      display: inline-block;
-      margin: 10px;
-      padding: 15px 25px;
-      background: #fff;
-      color: #ff3300;
-      font-weight: bold;
-      text-decoration: none;
-      border-radius: 12px;
-      box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+      display:inline-block;
+      margin:10px;
+      padding:15px 25px;
+      background:#fff;
+      color:#ff3300;
+      font-weight:bold;
+      text-decoration:none;
+      border-radius:12px;
+      box-shadow:2px 2px 8px rgba(0,0,0,0.3);
       transition: all 0.3s ease;
     }
     .buttons a:hover {
-      background: #ff3300;
-      color: #fff;
+      background:#ff3300;
+      color:#fff;
       transform: scale(1.05);
     }
   </style>
 </head>
 <body>
-
   <h1>Suryansh Tech Club</h1>
-  <p>Welcome to your Phone Security Cam! Access your live camera feed, record video, and capture motion snapshots directly from your browser. Use the buttons below to start.</p>
-
+  <p>Welcome to your Phone Security Cam! Access live camera feed, record video, and capture motion snapshots directly from your browser. Install it to your phone for easy access.</p>
   <div class="buttons">
     <a href="publisher.html" target="_blank">📱 Open Publisher (Phone)</a>
     <a href="viewer.html" target="_blank">👀 Open Viewer (Any Device)</a>
   </div>
-
 </body>
 </html>
